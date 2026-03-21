@@ -39,11 +39,11 @@ export function filterData(rijen: InspectieRij[], filters: FilterState): Inspect
     // Datumrange op Vaststellingsdatum
     if (filters.datumVan) {
       const vanGetal = datumStringNaarGetal(filters.datumVan);
-      if (vanGetal && rij._vaststellingsdatumRaw < vanGetal) return false;
+      if (vanGetal && rij._vaststellingsdatumRaw !== 0 && rij._vaststellingsdatumRaw < vanGetal) return false;
     }
     if (filters.datumTot) {
       const totGetal = datumStringNaarGetal(filters.datumTot);
-      if (totGetal && rij._vaststellingsdatumRaw > totGetal) return false;
+      if (totGetal && rij._vaststellingsdatumRaw !== 0 && rij._vaststellingsdatumRaw > totGetal) return false;
     }
 
     return true;

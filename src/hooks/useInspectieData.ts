@@ -1,8 +1,30 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import type { InspectieRij, DataSamenvatting, FilterState } from '../types/inspectie';
 import { INITIAL_FILTER_STATE } from '../types/inspectie';
 import { parseBestand, berekenSamenvatting } from '../utils/parser';
 import { filterData, sorteerData } from '../utils/filters';
+
+const STORAGE_KEY_FILTERS = 'inspectie_filters';
+const STORAGE_KEY_BESTANDEN = 'inspectie_bestanden';
+const STORAGE_KEY_WEERGAVE = 'inspectie_weergave';
+
+function laadUitStorage<T>(key: string, fallback: T): T {
+  try {
+    const opgeslagen = localStorage.getItem(key);
+    if (opgeslagen) return JSON.parse(opgeslagen) as T;
+  } catch {
+    // Bij fout: gebruik fallback
+  }
+  return fallback;
+}
+
+function slaOpInStorage(key: string, waarde: unknown): void {
+  try {
+    localStorage.setItem(key, JSON.stringify(waarde));
+  } catch {
+    // localStorage vol of niet beschikbaar — negeer
+  }
+}
 
 interface SortState {
   kolom: string;
@@ -12,13 +34,27 @@ interface SortState {
 export function useInspectieData() {
   const [rijen, setRijen] = useState<InspectieRij[]>([]);
   const [samenvatting, setSamenvatting] = useState<DataSamenvatting | null>(null);
-  const [filters, setFilters] = useState<FilterState>(INITIAL_FILTER_STATE);
+  const [filters, setFilters] = useState<FilterState>(() =>
+    laadUitStorage(STORAGE_KEY_FILTERS, INITIAL_FILTER_STATE)
+  );
   const [sortState, setSortState] = useState<SortState>({ kolom: 'BRIN', richting: 'asc' });
   const [isLaden, setIsLaden] = useState(false);
   const [fout, setFout] = useState<string | null>(null);
   const [pagina, setPagina] = useState(1);
-  const [geladenBestanden, setGeladenBestanden] = useState<string[]>([]);
+  const [geladenBestanden, setGeladenBestanden] = useState<string[]>(() =>
+    laadUitStorage(STORAGE_KEY_BESTANDEN, [])
+  );
   const rijenPerPagina = 50;
+
+  // Persisteer filters bij elke wijziging
+  useEffect(() => {
+    slaOpInStorage(STORAGE_KEY_FILTERS, filters);
+  }, [filters]);
+
+  // Persisteer bestandsnamen
+  useEffect(() => {
+    slaOpInStorage(STORAGE_KEY_BESTANDEN, geladenBestanden);
+  }, [geladenBestanden]);
 
   const laadBestanden = useCallback(async (files: File[]) => {
     setIsLaden(true);
@@ -46,10 +82,8 @@ export function useInspectieData() {
         setFout(`Sommige bestanden konden niet worden geladen:\n${fouten.join('\n')}`);
       }
 
-      // Voeg toe aan bestaande data (merge)
       setRijen(prev => {
         const samengevoegd = [...prev, ...nieuweRijen];
-        // Herbereken samenvatting met alle data
         setSamenvatting(berekenSamenvatting(samengevoegd));
         return samengevoegd;
       });
@@ -76,6 +110,9 @@ export function useInspectieData() {
     setFilters(INITIAL_FILTER_STATE);
     setFout(null);
     setPagina(1);
+    localStorage.removeItem(STORAGE_KEY_FILTERS);
+    localStorage.removeItem(STORAGE_KEY_BESTANDEN);
+    localStorage.removeItem(STORAGE_KEY_WEERGAVE);
   }, []);
 
   const gefilterdeRijen = useMemo(

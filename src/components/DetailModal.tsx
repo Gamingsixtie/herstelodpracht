@@ -1,5 +1,6 @@
 import type { InspectieRij } from '../types/inspectie';
 import { TYPE_OVT_LABELS } from '../types/inspectie';
+import { useEscapeToets } from '../hooks/useEscapeToets';
 
 interface Props {
   rij: InspectieRij;
@@ -29,6 +30,8 @@ function kwaliteitKleur(waarde: string): string {
 }
 
 export function DetailModal({ rij, onSluiten }: Props) {
+  useEscapeToets(onSluiten);
+
   // Verzamel standaard-oordelen per groep
   const standaardGroepen = STANDAARD_GROEPEN.map(groep => {
     const oordelen = Object.entries(rij)
@@ -39,7 +42,7 @@ export function DetailModal({ rij, onSluiten }: Props) {
   }).filter(g => g.oordelen.length > 0);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onSluiten}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Onderzoek details" onClick={onSluiten}>
       {/* Overlay */}
       <div className="absolute inset-0 bg-black/40" />
 
@@ -58,6 +61,7 @@ export function DetailModal({ rij, onSluiten }: Props) {
           </div>
           <button
             onClick={onSluiten}
+            aria-label="Sluiten"
             className="text-gray-400 hover:text-gray-600 text-2xl leading-none px-2"
           >
             ×

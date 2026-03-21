@@ -10,6 +10,7 @@ const TOEGESTANE_EXTENSIES = ['.ods', '.xlsx', '.xls'];
 
 export function BestandUpload({ onBestanden, isLaden, geladenBestanden }: Props) {
   const [isDragOver, setIsDragOver] = useState(false);
+  const [foutmelding, setFoutmelding] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const valideerEnLaad = useCallback((fileList: FileList | File[]) => {
@@ -27,7 +28,9 @@ export function BestandUpload({ onBestanden, isLaden, geladenBestanden }: Props)
     }
 
     if (ongeldig.length > 0) {
-      alert(`De volgende bestanden hebben een ongeldig formaat en worden overgeslagen:\n${ongeldig.join('\n')}\n\nAlleen ODS- en Excel-bestanden (.ods, .xlsx, .xls) worden geaccepteerd.`);
+      setFoutmelding(`Overgeslagen (ongeldig formaat): ${ongeldig.join(', ')}. Alleen ODS- en Excel-bestanden worden geaccepteerd.`);
+    } else {
+      setFoutmelding(null);
     }
 
     if (geldig.length > 0) {
@@ -53,6 +56,12 @@ export function BestandUpload({ onBestanden, isLaden, geladenBestanden }: Props)
 
   return (
     <div className="space-y-3">
+      {foutmelding && (
+        <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 text-orange-800 text-sm flex items-center justify-between">
+          <span>{foutmelding}</span>
+          <button onClick={() => setFoutmelding(null)} aria-label="Melding sluiten" className="text-orange-400 hover:text-orange-600 ml-2">×</button>
+        </div>
+      )}
       <div
         onDragOver={e => { e.preventDefault(); setIsDragOver(true); }}
         onDragLeave={() => setIsDragOver(false)}
@@ -73,6 +82,7 @@ export function BestandUpload({ onBestanden, isLaden, geladenBestanden }: Props)
           accept=".ods,.xlsx,.xls"
           multiple
           onChange={handleChange}
+          aria-label="Inspectiebestanden kiezen"
           className="hidden"
         />
         {isLaden ? (

@@ -39,6 +39,7 @@ export default function App() {
   const [wizardOpen, setWizardOpen] = useState(false);
   const [legendaOpen, setLegendaOpen] = useState(false);
   const [weergave, setWeergave] = useState<Weergave>('tabel');
+  const [exportFout, setExportFout] = useState<string | null>(null);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -153,15 +154,21 @@ export default function App() {
               {/* Hoofdcontent */}
               <div className="flex-1 min-w-0 space-y-3">
                 {/* Export knoppen */}
+                {exportFout && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-800 text-sm flex items-center justify-between">
+                    <span>{exportFout}</span>
+                    <button onClick={() => setExportFout(null)} className="text-red-400 hover:text-red-600 ml-2">×</button>
+                  </div>
+                )}
                 <div className="flex gap-2 justify-end">
                   <button
-                    onClick={() => exportNaarExcel(gefilterdeRijen, filters)}
+                    onClick={() => setExportFout(exportNaarExcel(gefilterdeRijen, filters))}
                     className="px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
                   >
                     Exporteer Excel
                   </button>
                   <button
-                    onClick={() => exportNaarPDF(gefilterdeRijen, filters)}
+                    onClick={() => setExportFout(exportNaarPDF(gefilterdeRijen, filters))}
                     className="px-3 py-1.5 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
                   >
                     Exporteer PDF

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useEscapeToets } from '../hooks/useEscapeToets';
 import {
   TYPE_ONDERZOEK_LEGENDA,
   CATEGORIE_INFO,
@@ -14,10 +15,11 @@ interface Props {
 type Tab = 'onderzoekstypen' | 'oordelen' | 'standaarden';
 
 export function Legenda({ onSluiten, uniekeTypeOnderzoeken }: Props) {
+  useEscapeToets(onSluiten);
   const [actieveTab, setActieveTab] = useState<Tab>('onderzoekstypen');
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onSluiten}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Legenda" onClick={onSluiten}>
       <div className="absolute inset-0 bg-black/40" />
       <div
         className="relative bg-white rounded-xl shadow-xl max-w-3xl w-full max-h-[85vh] overflow-hidden flex flex-col"

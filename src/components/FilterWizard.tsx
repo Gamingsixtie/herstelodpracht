@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import type { FilterState } from '../types/inspectie';
+import { useEscapeToets } from '../hooks/useEscapeToets';
 
 interface Props {
   updateFilter: <K extends keyof FilterState>(key: K, waarde: FilterState[K]) => void;
@@ -59,6 +60,7 @@ function berekenRelatieveDatum(): string {
 }
 
 export function FilterWizard({ updateFilter, resetFilters, onSluiten }: Props) {
+  useEscapeToets(onSluiten);
   const [stap, setStap] = useState<Stap>('doel');
   const [wizardState, setWizardState] = useState<WizardState>({
     doel: null,
@@ -156,7 +158,7 @@ export function FilterWizard({ updateFilter, resetFilters, onSluiten }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" onClick={onSluiten}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="Filterhulp wizard" onClick={onSluiten}>
       <div className="absolute inset-0 bg-black/40" />
       <div
         className="relative bg-white rounded-xl shadow-xl max-w-lg w-full max-h-[80vh] overflow-y-auto"
