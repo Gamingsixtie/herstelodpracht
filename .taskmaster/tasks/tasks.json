@@ -1,0 +1,629 @@
+{
+  "tasks": [
+    {
+      "id": 1,
+      "title": "Project Setup: Vite + React + TypeScript + TailwindCSS",
+      "description": "Initialiseer het project met Vite, React 18, TypeScript strict mode, en TailwindCSS. Configureer ESLint en de basis mappenstructuur (components, hooks, utils, types).",
+      "status": "done",
+      "priority": "high",
+      "dependencies": [],
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Vite + React + TypeScript scaffolding",
+          "status": "done"
+        },
+        {
+          "id": 2,
+          "title": "TailwindCSS installatie en configuratie",
+          "status": "done"
+        },
+        {
+          "id": 3,
+          "title": "ESLint configuratie",
+          "status": "done"
+        },
+        {
+          "id": 4,
+          "title": "Mappenstructuur aanmaken (components, hooks, utils, types)",
+          "status": "done"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Bestand Upload Component",
+      "description": "Bouw een upload component met drag-and-drop en bestandskiezer. Accepteert alleen ODS en XLSX bestanden. Toont upload status en foutmeldingen in het Nederlands.",
+      "status": "done",
+      "priority": "high",
+      "dependencies": [
+        1
+      ],
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Drag-and-drop zone component",
+          "status": "done"
+        },
+        {
+          "id": 2,
+          "title": "Bestandskiezer (file input) fallback",
+          "status": "done"
+        },
+        {
+          "id": 3,
+          "title": "Bestandstype validatie (ODS/XLSX)",
+          "status": "done"
+        },
+        {
+          "id": 4,
+          "title": "Upload status en Nederlandse foutmeldingen",
+          "status": "done"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "ODS/XLSX Parser met SheetJS",
+      "description": "Implementeer bestandsparsing met de SheetJS (xlsx) library. Parst ODS en XLSX bestanden naar een JSON array. Valideert dat verwachte kolommen aanwezig zijn (BRIN, Bestuursnummer, Sector, etc.).",
+      "status": "done",
+      "priority": "high",
+      "dependencies": [
+        1
+      ],
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "SheetJS installatie en configuratie",
+          "status": "done"
+        },
+        {
+          "id": 2,
+          "title": "ODS parsing implementatie",
+          "status": "done"
+        },
+        {
+          "id": 3,
+          "title": "XLSX parsing implementatie",
+          "status": "done"
+        },
+        {
+          "id": 4,
+          "title": "Kolom validatie (verwachte kolommen checken)",
+          "status": "done"
+        },
+        {
+          "id": 5,
+          "title": "Foutmelding bij ontbrekende kolommen (NL)",
+          "status": "done"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Data Normalisatie en TypeScript Types",
+      "description": "Definieer TypeScript interfaces voor de inspectiedata. Implementeer normalisatie: datums (YYYYMMDD getal → DD-MM-YYYY string), TypeOVT codes naar volledige namen, NaN/null handling in standaard-kolommen, BRIN als primaire school-ID, Bestuursnummer als primaire bestuur-ID.",
+      "status": "done",
+      "priority": "high",
+      "dependencies": [
+        3
+      ],
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "TypeScript interfaces (InspectieRij, etc.)",
+          "status": "done"
+        },
+        {
+          "id": 2,
+          "title": "Datum conversie: YYYYMMDD getal → DD-MM-YYYY",
+          "status": "done"
+        },
+        {
+          "id": 3,
+          "title": "TypeOVT code mapping (BAS→Basisschool, VOS→Voortgezet, etc.)",
+          "status": "done"
+        },
+        {
+          "id": 4,
+          "title": "NaN/null handling in standaard-kolommen",
+          "status": "done"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Upload Samenvatting Dashboard",
+      "description": "Na upload toon een samenvatting: totaal aantal scholen (unieke BRIN+Vestiging), besturen (unieke Bestuursnummer), onderzoeken, opgesplitst per sector (PO/SO/VO). Dashboard-achtige weergave met kaarten.",
+      "status": "done",
+      "priority": "high",
+      "dependencies": [
+        4
+      ],
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Samenvatting berekening (scholen, besturen, onderzoeken per sector)",
+          "status": "done"
+        },
+        {
+          "id": 2,
+          "title": "Dashboard kaarten component",
+          "status": "done"
+        },
+        {
+          "id": 3,
+          "title": "Sector-specifieke breakdown weergave",
+          "status": "done"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Filter State Management",
+      "description": "Implementeer centraal filter state management met React hooks (useReducer of useState). Definieer filter types: sector, bestuur zoek, school zoek, kwaliteitOnderwijs multiselect, typeOnderzoek multiselect, datumrange. Bied een useFilters hook aan voor componenten.",
+      "status": "done",
+      "priority": "high",
+      "dependencies": [
+        4
+      ],
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Filter state interface en types definiëren",
+          "status": "done"
+        },
+        {
+          "id": 2,
+          "title": "useFilters custom hook",
+          "status": "done"
+        },
+        {
+          "id": 3,
+          "title": "Filter reset functionaliteit",
+          "status": "done"
+        },
+        {
+          "id": 4,
+          "title": "Gefilterde data berekening met useMemo",
+          "status": "done"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Sector Filter (PO/SO/VO)",
+      "description": "Primaire filter die altijd zichtbaar is. Toggle buttons of tabs voor PO, SO, VO met optie voor 'Alle sectoren'. Toont aantal resultaten per sector.",
+      "status": "done",
+      "priority": "high",
+      "dependencies": [
+        6
+      ],
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Sector toggle/tab component",
+          "status": "done"
+        },
+        {
+          "id": 2,
+          "title": "Resultaat telling per sector",
+          "status": "done"
+        },
+        {
+          "id": 3,
+          "title": "Integratie met filter state",
+          "status": "done"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Zoekfilters: Bestuur en School",
+      "description": "Twee zoekveldinputs: (1) Bestuur: zoeken op bestuursnaam of bestuursnummer. (2) School: zoeken op BRIN-code of OVTNaam (opleidingsnaam). Case-insensitive zoeken met debounce voor performance.",
+      "status": "done",
+      "priority": "high",
+      "dependencies": [
+        6
+      ],
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Bestuur zoek component (naam + nummer)",
+          "status": "done"
+        },
+        {
+          "id": 2,
+          "title": "School zoek component (BRIN + OVTNaam)",
+          "status": "done"
+        },
+        {
+          "id": 3,
+          "title": "Debounce implementatie voor zoekveldinput",
+          "status": "done"
+        },
+        {
+          "id": 4,
+          "title": "Case-insensitive matching",
+          "status": "done"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Multiselect Filter: KwaliteitOnderwijs",
+      "description": "Multiselect dropdown/checkbox groep voor KwaliteitOnderwijs met 6 waarden: Voldoende, Onvoldoende, Goed, Zeer zwak, Basistoezicht, Geen eindoordeel. Toont aantal per waarde. Let op: 74% is 'Geen eindoordeel' — toon als neutrale optie.",
+      "status": "done",
+      "priority": "high",
+      "dependencies": [
+        6
+      ],
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Multiselect component (herbruikbaar)",
+          "status": "done"
+        },
+        {
+          "id": 2,
+          "title": "KwaliteitOnderwijs opties met telling",
+          "status": "done"
+        },
+        {
+          "id": 3,
+          "title": "Neutrale styling voor 'Geen eindoordeel'",
+          "status": "done"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Multiselect Filter: TypeOnderzoek",
+      "description": "Multiselect voor TypeOnderzoek (39 types). Groepeer de top-5: Stelselonderzoek, Herstelonderzoek school/opleiding, Kwaliteitsonderzoek naar aanleiding van risico's, Kwaliteitsonderzoek goede school, Onderzoek kwaliteitsverbetering. Overige types onder 'Overig' groep.",
+      "status": "done",
+      "priority": "high",
+      "dependencies": [
+        6
+      ],
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Gegroepeerde multiselect variant",
+          "status": "done"
+        },
+        {
+          "id": 2,
+          "title": "Top-5 groepering logica",
+          "status": "done"
+        },
+        {
+          "id": 3,
+          "title": "Overig groep voor resterende types",
+          "status": "done"
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "title": "Datumrange Filter op Vaststellingsdatum",
+      "description": "Datumrange picker voor Vaststellingsdatum. Van-tot selectie. Parse YYYYMMDD getallen naar Date objecten voor vergelijking. Toon datums als DD-MM-YYYY.",
+      "status": "done",
+      "priority": "medium",
+      "dependencies": [
+        6
+      ],
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Datumrange picker component (van-tot)",
+          "status": "done"
+        },
+        {
+          "id": 2,
+          "title": "YYYYMMDD getal naar Date conversie voor filtering",
+          "status": "done"
+        },
+        {
+          "id": 3,
+          "title": "DD-MM-YYYY weergave in picker",
+          "status": "done"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "title": "Filter Combinatie en Resultaat Telling",
+      "description": "Combineer alle actieve filters met AND-logica. Toon het aantal resultaten ('X resultaten gevonden'). Implementeer filter reset knop om alle filters te wissen. Optimaliseer met useMemo voor performance bij 11.431 rijen.",
+      "status": "done",
+      "priority": "high",
+      "dependencies": [
+        7,
+        8,
+        9,
+        10,
+        11
+      ],
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "AND-combinatie van alle filters",
+          "status": "done"
+        },
+        {
+          "id": 2,
+          "title": "Resultaat telling component",
+          "status": "done"
+        },
+        {
+          "id": 3,
+          "title": "Filter reset knop",
+          "status": "done"
+        },
+        {
+          "id": 4,
+          "title": "Performance optimalisatie met useMemo",
+          "status": "done"
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "title": "Resultaten Tabel Component",
+      "description": "Sorteerbare tabel met kolommen: BRIN, OVTNaam, Bestuursnaam, Sector, TypeOnderzoek, KwaliteitOnderwijs, Vaststellingsdatum. Paginering (50 rijen per pagina). Status styling: 'Geen eindoordeel' als neutraal, 'Voldoende/Goed' als positief, 'Onvoldoende/Zeer zwak' als negatief.",
+      "status": "done",
+      "priority": "high",
+      "dependencies": [
+        12
+      ],
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Tabel component met kolom configuratie",
+          "status": "done"
+        },
+        {
+          "id": 2,
+          "title": "Sortering op alle kolommen (klik kolomkop)",
+          "status": "done"
+        },
+        {
+          "id": 3,
+          "title": "Paginering (50 rijen/pagina) met navigatie",
+          "status": "done"
+        },
+        {
+          "id": 4,
+          "title": "Status badges/kleuren voor KwaliteitOnderwijs",
+          "status": "done"
+        },
+        {
+          "id": 5,
+          "title": "TypeOVT volledige naam weergave",
+          "status": "done"
+        },
+        {
+          "id": 6,
+          "title": "Datum DD-MM-YYYY formattering in tabel",
+          "status": "done"
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "title": "Detail-View Modal",
+      "description": "Bij klik op een tabelrij opent een modal of side panel met alle 62 kolommen van het onderzoek. Standaard-oordelen (OP1-OP8, SK1-SK2, VS1-VS2, etc.) worden gegroepeerd weergegeven. NaN-waarden tonen als 'Niet beoordeeld'. Alle data is alleen-lezen.",
+      "status": "done",
+      "priority": "medium",
+      "dependencies": [
+        13
+      ],
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Modal component met close functionaliteit",
+          "status": "done"
+        },
+        {
+          "id": 2,
+          "title": "Identificatie sectie (BRIN, OVT, Bestuur)",
+          "status": "done"
+        },
+        {
+          "id": 3,
+          "title": "Onderzoek sectie (type, datum, oordeel)",
+          "status": "done"
+        },
+        {
+          "id": 4,
+          "title": "Standaard-oordelen gegroepeerd (OP, SK, VS, etc.)",
+          "status": "done"
+        },
+        {
+          "id": 5,
+          "title": "NaN → 'Niet beoordeeld' weergave",
+          "status": "done"
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "title": "Excel Export (.xlsx)",
+      "description": "Exporteer de huidige gefilterde tabeldata naar een Excel-bestand (.xlsx) met SheetJS. Nederlandse kolomnamen. Dynamische bestandsnaam met datum en actieve filters (bijv. 'Inspectie_PO_Voldoende_2026-03-21.xlsx').",
+      "status": "done",
+      "priority": "high",
+      "dependencies": [
+        13
+      ],
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "SheetJS Excel export functie",
+          "status": "done"
+        },
+        {
+          "id": 2,
+          "title": "Nederlandse kolomnamen mapping",
+          "status": "done"
+        },
+        {
+          "id": 3,
+          "title": "Dynamische bestandsnaam generatie",
+          "status": "done"
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "title": "PDF Export",
+      "description": "Exporteer de huidige gefilterde tabeldata naar een PDF-bestand. Landscape formaat voor leesbaarheid. Passende kolombreedte. Zelfde dynamische bestandsnaam als Excel export.",
+      "status": "done",
+      "priority": "medium",
+      "dependencies": [
+        13
+      ],
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "jsPDF of pdfmake installatie",
+          "status": "done"
+        },
+        {
+          "id": 2,
+          "title": "PDF tabel generatie (landscape)",
+          "status": "done"
+        },
+        {
+          "id": 3,
+          "title": "Kolombreedte optimalisatie",
+          "status": "done"
+        },
+        {
+          "id": 4,
+          "title": "Dynamische bestandsnaam",
+          "status": "done"
+        }
+      ]
+    },
+    {
+      "id": 17,
+      "title": "UI Layout en Navigatie",
+      "description": "Hoofd-layout van de applicatie: header met titel, upload sectie bovenaan, filters in een sidebar of bovenaan, resultaten tabel centraal, export knoppen. Alle tekst in het Nederlands. Responsief desktop design.",
+      "status": "done",
+      "priority": "medium",
+      "dependencies": [
+        5,
+        13
+      ],
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "App layout component (header, main, sidebar)",
+          "status": "done"
+        },
+        {
+          "id": 2,
+          "title": "Workflow: upload → samenvatting → filters → tabel",
+          "status": "done"
+        },
+        {
+          "id": 3,
+          "title": "Export knoppen plaatsing",
+          "status": "done"
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "title": "Error Handling en Nederlandse Foutmeldingen",
+      "description": "Consistente error handling door de hele applicatie. Alle foutmeldingen in het Nederlands. Error boundary voor onverwachte fouten. Specifieke meldingen voor: ongeldig bestandsformaat, ontbrekende kolommen, leeg bestand, te groot bestand.",
+      "status": "done",
+      "priority": "medium",
+      "dependencies": [
+        2,
+        3
+      ],
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "Error boundary component",
+          "status": "done"
+        },
+        {
+          "id": 2,
+          "title": "Nederlandse foutmeldingen catalogus",
+          "status": "done"
+        },
+        {
+          "id": 3,
+          "title": "Toast/notificatie component voor meldingen",
+          "status": "done"
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "title": "Performance Optimalisatie",
+      "description": "Optimaliseer voor het echte bestand (11.431 rijen). useMemo voor gefilterde data. Debounce op zoekfilters. Paginering om DOM-nodes te beperken. Test parsing snelheid met echt ODS-bestand. Target: parsing < 5s, filter < 200ms.",
+      "status": "done",
+      "priority": "medium",
+      "dependencies": [
+        12,
+        13
+      ],
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "useMemo optimalisatie voor filter berekeningen",
+          "status": "done"
+        },
+        {
+          "id": 2,
+          "title": "Debounce op zoek inputs",
+          "status": "done"
+        },
+        {
+          "id": 3,
+          "title": "Performance test met 11.431 rijen",
+          "status": "done"
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "title": "Build Verificatie en Eindcontrole",
+      "description": "Zorg dat npm run build foutloos draait. Controleer alle UI-tekst op Nederlands. Verifieer dat geen data naar een server wordt verzonden. Test volledige workflow: upload → samenvatting → filter → tabel → detail → export.",
+      "status": "done",
+      "priority": "high",
+      "dependencies": [
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ],
+      "subtasks": [
+        {
+          "id": 1,
+          "title": "npm run build verificatie (foutloos)",
+          "status": "done"
+        },
+        {
+          "id": 2,
+          "title": "Nederlandse tekst controle",
+          "status": "done"
+        },
+        {
+          "id": 3,
+          "title": "Privacy check: geen server calls",
+          "status": "done"
+        },
+        {
+          "id": 4,
+          "title": "End-to-end workflow test",
+          "status": "done"
+        }
+      ]
+    }
+  ]
+}

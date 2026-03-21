@@ -1,0 +1,141 @@
+import { useState, useMemo, useCallback } from 'react';
+import type { InspectieRij, DataSamenvatting, FilterState } from '../types/inspectie';
+import { INITIAL_FILTER_STATE } from '../types/inspectie';
+import { parseBestand, berekenSamenvatting } from '../utils/parser';
+import { filterData, sorteerData } from '../utils/filters';
+
+interface SortState {
+  kolom: string;
+  richting: 'asc' | 'desc';
+}
+
+export function useInspectieData() {
+  const [rijen, setRijen] = useState<InspectieRij[]>([]);
+  const [samenvatting, setSamenvatting] = useState<DataSamenvatting | null>(null);
+  const [filters, setFilters] = useState<FilterState>(INITIAL_FILTER_STATE);
+  const [sortState, setSortState] = useState<SortState>({ kolom: 'BRIN', richting: 'asc' });
+  const [isLaden, setIsLaden] = useState(false);
+  const [fout, setFout] = useState<string | null>(null);
+  const [pagina, setPagina] = useState(1);
+  const [geladenBestanden, setGeladenBestanden] = useState<string[]>([]);
+  const rijenPerPagina = 50;
+
+  const laadBestanden = useCallback(async (files: File[]) => {
+    setIsLaden(true);
+    setFout(null);
+    try {
+      const nieuweRijen: InspectieRij[] = [];
+      const fouten: string[] = [];
+
+      for (const file of files) {
+        try {
+          const buffer = await file.arrayBuffer();
+          const result = parseBestand(buffer);
+          nieuweRijen.push(...result.rijen);
+        } catch (e) {
+          fouten.push(`${file.name}: ${e instanceof Error ? e.message : 'Onbekende fout'}`);
+        }
+      }
+
+      if (fouten.length > 0 && nieuweRijen.length === 0) {
+        setFout(`Geen bestanden konden worden geladen:\n${fouten.join('\n')}`);
+        return;
+      }
+
+      if (fouten.length > 0) {
+        setFout(`Sommige bestanden konden niet worden geladen:\n${fouten.join('\n')}`);
+      }
+
+      // Voeg toe aan bestaande data (merge)
+      setRijen(prev => {
+        const samengevoegd = [...prev, ...nieuweRijen];
+        // Herbereken samenvatting met alle data
+        setSamenvatting(berekenSamenvatting(samengevoegd));
+        return samengevoegd;
+      });
+
+      setGeladenBestanden(prev => [
+        ...prev,
+        ...files
+          .filter(f => !fouten.some(fout => fout.startsWith(f.name + ':')))
+          .map(f => f.name),
+      ]);
+
+      setPagina(1);
+    } catch (e) {
+      setFout(e instanceof Error ? e.message : 'Er is een onbekende fout opgetreden.');
+    } finally {
+      setIsLaden(false);
+    }
+  }, []);
+
+  const wisAlleData = useCallback(() => {
+    setRijen([]);
+    setSamenvatting(null);
+    setGeladenBestanden([]);
+    setFilters(INITIAL_FILTER_STATE);
+    setFout(null);
+    setPagina(1);
+  }, []);
+
+  const gefilterdeRijen = useMemo(
+    () => filterData(rijen, filters),
+    [rijen, filters]
+  );
+
+  const gesorteerdeRijen = useMemo(
+    () => sorteerData(gefilterdeRijen, sortState.kolom, sortState.richting),
+    [gefilterdeRijen, sortState]
+  );
+
+  const totaalPaginas = Math.ceil(gesorteerdeRijen.length / rijenPerPagina);
+  const paginaRijen = useMemo(
+    () => gesorteerdeRijen.slice((pagina - 1) * rijenPerPagina, pagina * rijenPerPagina),
+    [gesorteerdeRijen, pagina, rijenPerPagina]
+  );
+
+  const updateFilter = useCallback(<K extends keyof FilterState>(key: K, waarde: FilterState[K]) => {
+    setFilters(prev => ({ ...prev, [key]: waarde }));
+    setPagina(1);
+  }, []);
+
+  const resetFilters = useCallback(() => {
+    setFilters(INITIAL_FILTER_STATE);
+    setPagina(1);
+  }, []);
+
+  const updateSort = useCallback((kolom: string) => {
+    setSortState(prev => ({
+      kolom,
+      richting: prev.kolom === kolom && prev.richting === 'asc' ? 'desc' : 'asc',
+    }));
+  }, []);
+
+  const uniekeTypeOnderzoeken = useMemo(
+    () => [...new Set(rijen.map(r => r.TypeOnderzoek))].sort(),
+    [rijen]
+  );
+
+  return {
+    rijen,
+    samenvatting,
+    filters,
+    sortState,
+    isLaden,
+    fout,
+    pagina,
+    totaalPaginas,
+    rijenPerPagina,
+    gefilterdeRijen,
+    gesorteerdeRijen,
+    paginaRijen,
+    uniekeTypeOnderzoeken,
+    geladenBestanden,
+    laadBestanden,
+    wisAlleData,
+    updateFilter,
+    resetFilters,
+    updateSort,
+    setPagina,
+  };
+}
