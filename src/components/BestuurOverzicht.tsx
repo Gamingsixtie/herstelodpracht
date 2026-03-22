@@ -109,6 +109,28 @@ export function BestuurOverzicht({ rijen, besturenMap, onRijKlik }: Props) {
       }
     }
 
+    // Voeg BG-besturen toe die niet in school-data voorkomen + markeer Onvoldoende
+    for (const [bn, info] of besturenMap) {
+      if (!groepen.has(bn)) {
+        // Bestuur alleen in BG-data, niet in school-data
+        groepen.set(bn, {
+          bestuursnummer: bn,
+          bestuursnaam: info.Bestuursnaam,
+          bestuursInfo: info,
+          bestuurOnderzoeken: [],
+          heeftBestuurHerstel: info.Eindoordeel === 'Onvoldoende' || info.Eindoordeel === 'Zeer zwak',
+          scholen: [],
+          totaalHerstelScholen: 0,
+        });
+      } else {
+        // Bestuur bestaat al — markeer als herstel als BG-Eindoordeel Onvoldoende is
+        const groep = groepen.get(bn)!;
+        if (info.Eindoordeel === 'Onvoldoende' || info.Eindoordeel === 'Zeer zwak') {
+          groep.heeftBestuurHerstel = true;
+        }
+      }
+    }
+
     // Nu scholen groeperen per BRIN binnen elk bestuur
     const scholenPerBestuur = new Map<number, Map<string, SchoolGroep>>();
 
@@ -256,8 +278,8 @@ export function BestuurOverzicht({ rijen, besturenMap, onRijKlik }: Props) {
           onChange={e => setFilter(e.target.value as FilterOptie)}
           className="px-2.5 py-1.5 border border-gray-300 rounded text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
-          <option value="alleen-herstel">Alleen met herstelopdrachten</option>
-          <option value="bestuur-herstel">Alleen bestuursniveau herstel</option>
+          <option value="alleen-herstel">Alleen met herstelopdrachten (school + bestuur)</option>
+          <option value="bestuur-herstel">Alleen bestuursniveau (Eindoordeel Onvoldoende/Zeer zwak uit BG-data + bestuursonderzoeken)</option>
           <option value="alle">Alle besturen</option>
         </select>
 
