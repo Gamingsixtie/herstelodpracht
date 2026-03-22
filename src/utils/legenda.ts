@@ -187,3 +187,37 @@ export const STANDAARD_GROEP_LEGENDA: Record<string, { naam: string; uitleg: str
     },
   },
 };
+
+/** Toelichting per TypeOnderzoekCode — wat betekent deze code? */
+export const HERSTELCODE_TOELICHTING: Record<string, string> = {
+  // School-niveau herstelcodes
+  HERSTOVT25: 'School is eerder als onvoldoende/zeer zwak beoordeeld. De Inspectie controleert of de tekortkomingen zijn opgelost (kader 2025).',
+  HERSTOVT21: 'Herstelonderzoek bij school die eerder onvoldoende scoorde (kader 2021). Controle of verbeterplan is uitgevoerd.',
+  HERSTOVT23: 'Herstelonderzoek bij school (kader 2023). Controle of tekortkomingen uit eerdere inspectie zijn verholpen.',
+  HERSTELOVT: 'Generiek herstelonderzoek bij school/opleiding. Controle na eerder geconstateerde tekortkomingen.',
+  KORISICO21: 'De Inspectie heeft risicosignalen gedetecteerd (bijv. dalende toetsresultaten, klachten). Onderzoek of er kwaliteitsproblemen zijn.',
+  KO_RISICO: 'Kwaliteitsonderzoek bij school met risicosignalen. Kan leiden tot herstelopdracht.',
+  OKVPO: 'Vervolgonderzoek bij school die eerder tekortkomingen had. Bekijkt of aantoonbare verbeteringen zijn gerealiseerd.',
+  VO_OKV13: 'Onderzoek kwaliteitsverbetering in het voortgezet onderwijs (kader 2013).',
+  VO_OKV_12: 'Onderzoek kwaliteitsverbetering VO (kader 2012).',
+  OKV_ZW: 'Onderzoek kwaliteitsverbetering bij zeer zwakke school. Extra urgentie vanwege ernstige tekortkomingen.',
+  OKV_ZZ: 'Onderzoek kwaliteitsverbetering bij zeer zwakke school (variant).',
+  HOZBTL25: 'Herstelonderzoek bij Nederlandse school in het buitenland (kader 2025).',
+  HERCNOVT21: 'Herstelonderzoek bij school op Caribisch Nederland.',
+  OVTDEUGD21: 'Herstelonderzoek gericht op deugdelijkheidseisen — wettelijke minimumeisen.',
+  // Bestuur-niveau herstelcodes
+  HOZVRW25: 'Herstelonderzoek naar verantwoording door het bestuur. Controle of bestuur tekortkomingen in governance heeft opgelost.',
+  VRWHERST21: 'Verantwoording herstelopdracht bestuur (kader 2021). Bestuur moet aantonen dat verbeteringen zijn doorgevoerd.',
+  VRWHERST: 'Verantwoording herstelopdracht bestuur (generiek).',
+  HERBST21: 'Herstelonderzoek bij bestuur en de scholen daaronder (kader 2021).',
+  HERBST: 'Herstelonderzoek op bestuursniveau — het bestuur zelf is beoordeeld.',
+  BOV25: 'Bestuursonderzoek (kader 2025). Beoordeling van kwaliteitszorg, financieel beheer en governance.',
+  // Overige veelvoorkomende codes
+  SKO23: 'Stelselonderzoek — reguliere steekproef over het hele onderwijsstelsel, geen individueel oordeel.',
+  SKO23V2: 'Stelselonderzoek gecombineerd met risico-onderzoek.',
+  KOGOED21: 'Kwaliteitsonderzoek bij school die al goed presteert. Kan leiden tot predicaat "Goed".',
+  VO_KO: 'Kwaliteitsonderzoek in het voortgezet onderwijs.',
+  KOBTL: 'Kwaliteitsonderzoek bij Nederlandse school in het buitenland.',
+  KONIEUWS23: 'Kwaliteitsonderzoek bij nieuwe school — controle of de school aan de basiskwaliteit voldoet.',
+  KOPO: 'Kwaliteitsonderzoek primair onderwijs.',
+};

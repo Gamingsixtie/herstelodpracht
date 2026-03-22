@@ -286,12 +286,13 @@ export function BestuurOverzicht({ rijen, besturenMap, onRijKlik }: Props) {
           </div>
         ) : (
           gefilterd.map(bestuur => (
-            <BestuurRij
+            <BestuurRijComponent
               key={bestuur.bestuursnummer}
               bestuur={bestuur}
               isOpen={openBesturen.has(bestuur.bestuursnummer)}
               onToggle={() => toggleBestuur(bestuur.bestuursnummer)}
               onRijKlik={onRijKlik}
+              verbergScholen={filter === 'bestuur-herstel'}
             />
           ))
         )}
@@ -300,11 +301,12 @@ export function BestuurOverzicht({ rijen, besturenMap, onRijKlik }: Props) {
   );
 }
 
-function BestuurRij({ bestuur, isOpen, onToggle, onRijKlik }: {
+function BestuurRijComponent({ bestuur, isOpen, onToggle, onRijKlik, verbergScholen }: {
   bestuur: BestuurGroep;
   isOpen: boolean;
   onToggle: () => void;
   onRijKlik: (rij: InspectieRij) => void;
+  verbergScholen: boolean;
 }) {
   return (
     <div>
@@ -395,20 +397,22 @@ function BestuurRij({ bestuur, isOpen, onToggle, onRijKlik }: {
             </div>
           )}
 
-          {/* Scholen */}
-          <div className="px-4 py-2 ml-6">
-            {bestuur.scholen
-              .sort((a, b) => oordeelPrioriteit(a.ernstigsteOordeel) - oordeelPrioriteit(b.ernstigsteOordeel))
-              .map(school => (
-                <SchoolRij key={school.brin} school={school} onRijKlik={onRijKlik} />
-              ))}
+          {/* Scholen — verborgen bij bestuursniveau filter */}
+          {!verbergScholen && (
+            <div className="px-4 py-2 ml-6">
+              {bestuur.scholen
+                .sort((a, b) => oordeelPrioriteit(a.ernstigsteOordeel) - oordeelPrioriteit(b.ernstigsteOordeel))
+                .map(school => (
+                  <SchoolRij key={school.brin} school={school} onRijKlik={onRijKlik} />
+                ))}
 
-            {bestuur.scholen.length === 0 && (
-              <div className="text-xs text-gray-400 py-2">
-                Geen scholen met onderzoeken in de huidige selectie.
-              </div>
-            )}
-          </div>
+              {bestuur.scholen.length === 0 && (
+                <div className="text-xs text-gray-400 py-2">
+                  Geen scholen met onderzoeken in de huidige selectie.
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>

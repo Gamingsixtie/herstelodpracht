@@ -149,7 +149,7 @@ export default function App() {
         {/* Samenvatting + Content */}
         {samenvatting && (
           <>
-            <Samenvatting samenvatting={samenvatting} besturenData={besturenData} />
+            <Samenvatting samenvatting={samenvatting} besturenData={besturenData} schoolRijen={rijen} />
 
             {/* Filters + Content layout */}
             <div className="flex gap-6">
