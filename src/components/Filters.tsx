@@ -1,16 +1,18 @@
 import { useState, useCallback } from 'react';
 import type { FilterState } from '../types/inspectie';
 import { KWALITEIT_ONDERWIJS_WAARDEN, TOP_ONDERZOEKSTYPEN } from '../types/inspectie';
+import { HERSTELCODE_TOELICHTING } from '../utils/legenda';
 
 interface Props {
   filters: FilterState;
   updateFilter: <K extends keyof FilterState>(key: K, waarde: FilterState[K]) => void;
   resetFilters: () => void;
   uniekeTypeOnderzoeken: string[];
+  uniekeHerstelCodes: string[];
   aantalResultaten: number;
 }
 
-export function Filters({ filters, updateFilter, resetFilters, uniekeTypeOnderzoeken, aantalResultaten }: Props) {
+export function Filters({ filters, updateFilter, resetFilters, uniekeTypeOnderzoeken, uniekeHerstelCodes, aantalResultaten }: Props) {
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-4">
       <div className="flex items-center justify-between">
@@ -64,6 +66,15 @@ export function Filters({ filters, updateFilter, resetFilters, uniekeTypeOnderzo
         geselecteerd={filters.typeOnderzoek}
         onChange={waarde => updateFilter('typeOnderzoek', waarde)}
       />
+
+      {/* Herstelcode filter */}
+      {uniekeHerstelCodes.length > 0 && (
+        <HerstelCodeFilter
+          opties={uniekeHerstelCodes}
+          geselecteerd={filters.herstelCode}
+          onChange={waarde => updateFilter('herstelCode', waarde)}
+        />
+      )}
 
       {/* Datumrange */}
       <DatumRange
@@ -269,6 +280,99 @@ function TypeOnderzoekFilter({ opties, geselecteerd, onChange }: {
                     className="mr-2"
                   />
                   {optie}
+                </label>
+              ))}
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function HerstelCodeFilter({ opties, geselecteerd, onChange }: {
+  opties: string[];
+  geselecteerd: string[];
+  onChange: (waarde: string[]) => void;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const toggle = (code: string) => {
+    if (geselecteerd.includes(code)) {
+      onChange(geselecteerd.filter(c => c !== code));
+    } else {
+      onChange([...geselecteerd, code]);
+    }
+  };
+
+  // Groepeer: herstel-codes bovenaan, overige onderaan
+  const herstelPatronen = ['HERST', 'OKV', 'KORISICO', 'KO_RISICO', 'HOZVRW', 'VRWHERST', 'HERBST', 'BOV'];
+  const herstelCodes = opties.filter(c => herstelPatronen.some(p => c.toUpperCase().includes(p)));
+  const overigeCodes = opties.filter(c => !herstelPatronen.some(p => c.toUpperCase().includes(p)));
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">Herstelcode</label>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm text-left bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      >
+        {geselecteerd.length === 0
+          ? 'Alle codes'
+          : `${geselecteerd.length} geselecteerd`
+        }
+        <span className="float-right">{isOpen ? '▲' : '▼'}</span>
+      </button>
+      {isOpen && (
+        <div className="mt-1 border border-gray-200 rounded-md bg-white max-h-72 overflow-y-auto shadow-sm">
+          {herstelCodes.length > 0 && (
+            <>
+              <div className="px-3 py-1 text-xs font-semibold text-red-600 bg-red-50 uppercase tracking-wide">
+                Herstelopdrachten
+              </div>
+              {herstelCodes.map(code => {
+                const toelichting = HERSTELCODE_TOELICHTING[code];
+                return (
+                  <label
+                    key={code}
+                    className="flex items-start px-3 py-1.5 hover:bg-gray-50 cursor-pointer text-sm gap-2"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={geselecteerd.includes(code)}
+                      onChange={() => toggle(code)}
+                      className="mt-0.5"
+                    />
+                    <div className="min-w-0">
+                      <span className="font-mono text-xs bg-gray-100 px-1 rounded">{code}</span>
+                      {toelichting && (
+                        <div className="text-xs text-gray-500 mt-0.5 leading-snug">{toelichting.slice(0, 80)}...</div>
+                      )}
+                    </div>
+                  </label>
+                );
+              })}
+            </>
+          )}
+          {overigeCodes.length > 0 && (
+            <>
+              <div className="px-3 py-1 text-xs font-semibold text-gray-500 bg-gray-50 uppercase tracking-wide">
+                Overige onderzoekscodes
+              </div>
+              {overigeCodes.map(code => (
+                <label
+                  key={code}
+                  className="flex items-center px-3 py-1.5 hover:bg-gray-50 cursor-pointer text-sm gap-2"
+                >
+                  <input
+                    type="checkbox"
+                    checked={geselecteerd.includes(code)}
+                    onChange={() => toggle(code)}
+                  />
+                  <span className="font-mono text-xs">{code}</span>
+                  {HERSTELCODE_TOELICHTING[code] && (
+                    <span className="text-xs text-gray-400 truncate">{HERSTELCODE_TOELICHTING[code]?.slice(0, 50)}</span>
+                  )}
                 </label>
               ))}
             </>

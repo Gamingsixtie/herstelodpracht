@@ -28,6 +28,7 @@ export default function App() {
     gefilterdeRijen,
     paginaRijen,
     uniekeTypeOnderzoeken,
+    uniekeHerstelCodes,
     geladenBestanden,
     bronBestandenGeladen,
     laadBestanden,
@@ -201,6 +202,7 @@ export default function App() {
                   updateFilter={updateFilter}
                   resetFilters={resetFilters}
                   uniekeTypeOnderzoeken={uniekeTypeOnderzoeken}
+                  uniekeHerstelCodes={uniekeHerstelCodes}
                   aantalResultaten={gefilterdeRijen.length}
                 />
               </div>

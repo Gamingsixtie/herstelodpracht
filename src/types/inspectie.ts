@@ -121,6 +121,7 @@ export interface FilterState {
   schoolZoek: string;
   kwaliteitOnderwijs: string[];
   typeOnderzoek: string[];
+  herstelCode: string[];
   datumVan: string | null;   // DD-MM-YYYY
   datumTot: string | null;   // DD-MM-YYYY
 }
@@ -131,6 +132,7 @@ export const INITIAL_FILTER_STATE: FilterState = {
   schoolZoek: '',
   kwaliteitOnderwijs: [],
   typeOnderzoek: [],
+  herstelCode: [],
   datumVan: null,
   datumTot: null,
 };

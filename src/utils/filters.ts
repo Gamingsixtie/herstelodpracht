@@ -36,6 +36,11 @@ export function filterData(rijen: InspectieRij[], filters: FilterState): Inspect
       return false;
     }
 
+    // Herstelcode filter (TypeOnderzoekCode)
+    if (filters.herstelCode.length > 0 && !filters.herstelCode.includes(rij.TypeOnderzoekCode)) {
+      return false;
+    }
+
     // Datumrange op Vaststellingsdatum
     if (filters.datumVan) {
       const vanGetal = datumStringNaarGetal(filters.datumVan);

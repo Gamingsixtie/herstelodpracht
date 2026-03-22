@@ -215,6 +215,11 @@ export function useInspectieData() {
     [rijen]
   );
 
+  const uniekeHerstelCodes = useMemo(
+    () => [...new Set(rijen.map(r => r.TypeOnderzoekCode).filter(c => c))].sort(),
+    [rijen]
+  );
+
   // Bestuur lookup map: Bestuursnummer → BestuurRij
   const besturenMap = useMemo(() => {
     const map = new Map<number, BestuurRij>();
@@ -240,6 +245,7 @@ export function useInspectieData() {
     gesorteerdeRijen,
     paginaRijen,
     uniekeTypeOnderzoeken,
+    uniekeHerstelCodes,
     geladenBestanden,
     bronBestandenGeladen,
     laadBestanden,
