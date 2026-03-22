@@ -329,6 +329,17 @@ function BestuurRij({ bestuur, isOpen, onToggle, onRijKlik }: {
                 Herstelopdracht bestuur
               </span>
             )}
+            {bestuur.bestuursInfo && bestuur.bestuursInfo.Eindoordeel !== 'Geen oordeel' && (
+              <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${
+                bestuur.bestuursInfo.Eindoordeel === 'Voldoende'
+                  ? 'bg-blue-50 text-blue-700 border-blue-200'
+                  : bestuur.bestuursInfo.Eindoordeel === 'Onvoldoende' || bestuur.bestuursInfo.Eindoordeel === 'Zeer zwak'
+                  ? 'bg-red-50 text-red-700 border-red-200'
+                  : 'bg-gray-50 text-gray-600 border-gray-200'
+              }`}>
+                {bestuur.bestuursInfo.Eindoordeel}
+              </span>
+            )}
             {bestuur.bestuursInfo && bestuur.bestuursInfo.FinancieelBeheer !== 'Geen samenvattend oordeel' && (
               <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${
                 bestuur.bestuursInfo.FinancieelBeheer === 'Voldoende'

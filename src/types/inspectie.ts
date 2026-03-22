@@ -48,7 +48,11 @@ export interface BestuurRij {
   BestuursnummerOrigineel: string; // origineel met leading zeros bijv. "00008"
   Bestuursnaam: string;
   SectorenBijBestuur: string;   // bijv. "PO-VO-SO"
+  Eindoordeel: string;          // bestuursoordeel
   FinancieelBeheer: string;     // bijv. "Voldoende" of "Geen samenvattend oordeel"
+  FinancielePositie: string;
+  KwaliteitszorgEnAmbitie: string;
+  Onderwijsresultaten: string;
 }
 
 /** Samenvatting na upload */

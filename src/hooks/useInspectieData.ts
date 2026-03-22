@@ -90,7 +90,7 @@ export function useInspectieData() {
 
         for (const bestandsnaam of manifest.bestanden) {
           try {
-            const res = await fetch(`./bronbestanden/${bestandsnaam}`);
+            const res = await fetch(`./bronbestanden/${encodeURIComponent(bestandsnaam)}`);
             if (!res.ok) continue;
             const buffer = await res.arrayBuffer();
             const result = parseBestand(buffer);

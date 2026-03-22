@@ -159,13 +159,20 @@ function normaliseerSchoolRij(rij: RuweInspectieRij): InspectieRij {
 function normaliseerBestuurRij(rij: RuweInspectieRij): BestuurRij {
   const { nummer, origineel } = normaliseerBestuursnummer(rij['Bestuursnummer']);
 
+  const fb = String(rij['FinancieelBeheer'] ?? '').trim();
+  const eo = String(rij['Eindoordeel'] ?? '').trim();
+
   return {
     Peildatum: String(rij['Peildatum'] ?? ''),
     Bestuursnummer: nummer,
     BestuursnummerOrigineel: origineel,
     Bestuursnaam: String(rij['Bestuursnaam'] ?? ''),
     SectorenBijBestuur: String(rij['SectorenBijBestuur'] ?? ''),
-    FinancieelBeheer: String(rij['FinancieelBeheer'] ?? 'Geen samenvattend oordeel') || 'Geen samenvattend oordeel',
+    Eindoordeel: eo || 'Geen oordeel',
+    FinancieelBeheer: fb || 'Geen samenvattend oordeel',
+    FinancielePositie: String(rij['FinancielePositie'] ?? '').trim() || 'Geen oordeel',
+    KwaliteitszorgEnAmbitie: String(rij['KwaliteitszorgEnAmbitie'] ?? '').trim() || 'Geen oordeel',
+    Onderwijsresultaten: String(rij['Onderwijsresultaten'] ?? '').trim() || 'Geen oordeel',
   };
 }
 
