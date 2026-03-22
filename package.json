@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "vite",
     "manifest": "node scripts/update-manifest.js",
-    "build": "node scripts/update-manifest.js && tsc && vite build",
+    "build": "node scripts/build-data.js && node scripts/update-manifest.js && tsc && vite build",
     "lint": "tsc --noEmit",
     "preview": "vite preview"
   },
