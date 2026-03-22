@@ -27,6 +27,22 @@ function slaOpInStorage(key: string, waarde: unknown): void {
 }
 
 /**
+ * Dedupliceer schoolrijen: per OVT+Onderzoeksnummer alleen de meest recente Peildatum bewaren.
+ * Dit voorkomt dat dezelfde school+onderzoek 7x voorkomt (1x per maandbestand).
+ */
+function dedupliceerSchoolRijen(rijen: InspectieRij[]): InspectieRij[] {
+  const perKey = new Map<string, InspectieRij>();
+  for (const rij of rijen) {
+    const key = `${rij.OVT}|${rij.Onderzoeksnummer || rij.BRIN + rij.Vestiging}`;
+    const bestaand = perKey.get(key);
+    if (!bestaand || rij.Peildatum > bestaand.Peildatum) {
+      perKey.set(key, rij);
+    }
+  }
+  return Array.from(perKey.values());
+}
+
+/**
  * Dedupliceer bestuurdata: houd per Bestuursnummer alleen de meest recente peildatum.
  */
 function dedupliceerBesturen(rijen: BestuurRij[]): BestuurRij[] {
@@ -85,36 +101,21 @@ export function useInspectieData() {
 
         setIsLaden(true);
 
-        // Sorteer bestanden: meest recente eerst (hogere datums eerst)
-        const gesorteerd = [...manifest.bestanden].sort().reverse();
-
-        // Selecteer per type alleen het meest recente bestand
-        // om te voorkomen dat 7x dezelfde maanddata wordt geladen
-        let schoolBestand: string | null = null;
-        let bestuurBestand: string | null = null;
-
-        for (const naam of gesorteerd) {
-          const lower = naam.toLowerCase();
-          if (!schoolBestand && (lower.includes('po') || lower.includes('so') || lower.includes('vo') || lower.includes('primair'))) {
-            schoolBestand = naam;
-          }
-          if (!bestuurBestand && (lower.includes('bg') || lower.includes('besturen'))) {
-            bestuurBestand = naam;
-          }
-          if (schoolBestand && bestuurBestand) break;
-        }
-
-        const teLaden = [schoolBestand, bestuurBestand].filter((n): n is string => n !== null);
-
         const alleSchoolRijen: InspectieRij[] = [];
         const alleBestuurRijen: BestuurRij[] = [];
         const geladen: string[] = [];
 
-        for (const bestandsnaam of teLaden) {
+        // Laad bestanden stapsgewijs met UI-pauzes om hangen te voorkomen
+        for (let i = 0; i < manifest.bestanden.length; i++) {
+          const bestandsnaam = manifest.bestanden[i]!;
           try {
             const res = await fetch(`./bronbestanden/${encodeURIComponent(bestandsnaam)}`);
             if (!res.ok) continue;
             const buffer = await res.arrayBuffer();
+
+            // Geef de UI-thread even ruimte tussen zware parse-operaties
+            await new Promise(resolve => setTimeout(resolve, 0));
+
             const result = parseBestand(buffer);
 
             if (result.type === 'school') {
@@ -126,12 +127,19 @@ export function useInspectieData() {
           } catch {
             // Individueel bestand overslaan bij fout
           }
+
+          // Tussentijds UI updaten zodat gebruiker voortgang ziet
+          if ((i + 1) % 3 === 0 || i === manifest.bestanden.length - 1) {
+            setGeladenBestanden([...geladen]);
+          }
         }
 
         if (alleSchoolRijen.length > 0 || alleBestuurRijen.length > 0) {
-          setRijen(alleSchoolRijen);
+          // Dedupliceer schoolrijen: per OVT+Onderzoeksnummer alleen de meest recente Peildatum
+          const gedeupSchool = dedupliceerSchoolRijen(alleSchoolRijen);
+          setRijen(gedeupSchool);
           setBesturenData(dedupliceerBesturen(alleBestuurRijen));
-          setSamenvatting(berekenSamenvatting(alleSchoolRijen));
+          setSamenvatting(berekenSamenvatting(gedeupSchool));
           setGeladenBestanden(geladen);
           setBronBestandenGeladen(true);
         }

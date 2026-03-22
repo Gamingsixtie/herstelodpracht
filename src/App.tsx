@@ -83,7 +83,20 @@ export default function App() {
         {isLaden && !samenvatting && (
           <div className="text-center py-12">
             <div className="text-lg font-medium text-gray-700">Bronbestanden worden geladen...</div>
-            <div className="mt-2 text-sm text-gray-500">Even geduld alstublieft</div>
+            <div className="mt-2 text-sm text-gray-500">
+              {geladenBestanden.length > 0
+                ? `${geladenBestanden.length} bestanden verwerkt, even geduld...`
+                : 'Even geduld alstublieft'
+              }
+            </div>
+            {geladenBestanden.length > 0 && (
+              <div className="mt-3 max-w-xs mx-auto bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-blue-600 rounded-full h-2 transition-all"
+                  style={{ width: `${Math.min((geladenBestanden.length / 14) * 100, 100)}%` }}
+                />
+              </div>
+            )}
           </div>
         )}
 
