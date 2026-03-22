@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import type { InspectieRij, DataSamenvatting, FilterState } from '../types/inspectie';
 import { INITIAL_FILTER_STATE } from '../types/inspectie';
 import { parseBestand, berekenSamenvatting } from '../utils/parser';
@@ -41,10 +41,10 @@ export function useInspectieData() {
   const [isLaden, setIsLaden] = useState(false);
   const [fout, setFout] = useState<string | null>(null);
   const [pagina, setPagina] = useState(1);
-  const [geladenBestanden, setGeladenBestanden] = useState<string[]>(() =>
-    laadUitStorage(STORAGE_KEY_BESTANDEN, [])
-  );
+  const [geladenBestanden, setGeladenBestanden] = useState<string[]>([]);
+  const [bronBestandenGeladen, setBronBestandenGeladen] = useState(false);
   const rijenPerPagina = 50;
+  const initRef = useRef(false);
 
   // Persisteer filters bij elke wijziging
   useEffect(() => {
@@ -55,6 +55,52 @@ export function useInspectieData() {
   useEffect(() => {
     slaOpInStorage(STORAGE_KEY_BESTANDEN, geladenBestanden);
   }, [geladenBestanden]);
+
+  // Laad ingebouwde bronbestanden bij app-start
+  useEffect(() => {
+    if (initRef.current) return;
+    initRef.current = true;
+
+    async function laadBronBestanden() {
+      try {
+        const response = await fetch('./bronbestanden/manifest.json');
+        if (!response.ok) return;
+
+        const manifest = await response.json() as { bestanden: string[] };
+        if (!manifest.bestanden || manifest.bestanden.length === 0) return;
+
+        setIsLaden(true);
+        const alleRijen: InspectieRij[] = [];
+        const geladen: string[] = [];
+
+        for (const bestandsnaam of manifest.bestanden) {
+          try {
+            const res = await fetch(`./bronbestanden/${bestandsnaam}`);
+            if (!res.ok) continue;
+            const buffer = await res.arrayBuffer();
+            const result = parseBestand(buffer);
+            alleRijen.push(...result.rijen);
+            geladen.push(bestandsnaam);
+          } catch {
+            // Individueel bestand overslaan bij fout
+          }
+        }
+
+        if (alleRijen.length > 0) {
+          setRijen(alleRijen);
+          setSamenvatting(berekenSamenvatting(alleRijen));
+          setGeladenBestanden(geladen);
+          setBronBestandenGeladen(true);
+        }
+      } catch {
+        // Manifest niet gevonden = geen ingebouwde bestanden, dat is OK
+      } finally {
+        setIsLaden(false);
+      }
+    }
+
+    laadBronBestanden();
+  }, []);
 
   const laadBestanden = useCallback(async (files: File[]) => {
     setIsLaden(true);
@@ -110,6 +156,7 @@ export function useInspectieData() {
     setFilters(INITIAL_FILTER_STATE);
     setFout(null);
     setPagina(1);
+    setBronBestandenGeladen(false);
     localStorage.removeItem(STORAGE_KEY_FILTERS);
     localStorage.removeItem(STORAGE_KEY_BESTANDEN);
     localStorage.removeItem(STORAGE_KEY_WEERGAVE);
@@ -168,6 +215,7 @@ export function useInspectieData() {
     paginaRijen,
     uniekeTypeOnderzoeken,
     geladenBestanden,
+    bronBestandenGeladen,
     laadBestanden,
     wisAlleData,
     updateFilter,

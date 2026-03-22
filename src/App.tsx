@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useInspectieData } from './hooks/useInspectieData';
 import { BestandUpload } from './components/BestandUpload';
 import { Samenvatting } from './components/Samenvatting';
@@ -27,6 +27,7 @@ export default function App() {
     paginaRijen,
     uniekeTypeOnderzoeken,
     geladenBestanden,
+    bronBestandenGeladen,
     laadBestanden,
     wisAlleData,
     updateFilter,
@@ -40,34 +41,72 @@ export default function App() {
   const [legendaOpen, setLegendaOpen] = useState(false);
   const [weergave, setWeergave] = useState<Weergave>('tabel');
   const [exportFout, setExportFout] = useState<string | null>(null);
+  const [devModus, setDevModus] = useState(false);
+
+  // Developer modus: Ctrl+Shift+D
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key === 'D') {
+        e.preventDefault();
+        setDevModus(prev => !prev);
+      }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4">
-          <h1 className="text-xl font-bold text-gray-900">
-            Herstelopdrachten Overzicht
-          </h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            Inspectie van het Onderwijs
-          </p>
+        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">
+              Herstelopdrachten Overzicht
+            </h1>
+            <p className="text-sm text-gray-500 mt-0.5">
+              Inspectie van het Onderwijs
+            </p>
+          </div>
+          {devModus && (
+            <span className="text-xs bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full border border-yellow-300">
+              Developer modus
+            </span>
+          )}
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-        {/* Upload */}
-        {!samenvatting ? (
-          <BestandUpload
-            onBestanden={laadBestanden}
-            isLaden={isLaden}
-            geladenBestanden={geladenBestanden}
-          />
-        ) : (
+        {/* Laden indicator bij bronbestanden */}
+        {isLaden && !samenvatting && (
+          <div className="text-center py-12">
+            <div className="text-lg font-medium text-gray-700">Bronbestanden worden geladen...</div>
+            <div className="mt-2 text-sm text-gray-500">Even geduld alstublieft</div>
+          </div>
+        )}
+
+        {/* Upload — alleen in dev modus OF als er geen bronbestanden zijn */}
+        {!isLaden && !samenvatting && !bronBestandenGeladen && (
+          devModus ? (
+            <BestandUpload
+              onBestanden={laadBestanden}
+              isLaden={isLaden}
+              geladenBestanden={geladenBestanden}
+            />
+          ) : (
+            <div className="text-center py-12 text-gray-500">
+              <div className="text-lg font-medium">Geen bronbestanden beschikbaar</div>
+              <div className="mt-2 text-sm">Neem contact op met de beheerder om bestanden toe te voegen.</div>
+            </div>
+          )
+        )}
+
+        {/* Dev modus: extra bestanden uploaden */}
+        {devModus && samenvatting && (
           <details className="group">
-            <summary className="cursor-pointer text-sm text-blue-600 hover:text-blue-800 list-none flex items-center gap-1">
+            <summary className="cursor-pointer text-sm text-yellow-700 hover:text-yellow-900 list-none flex items-center gap-1">
               <span className="group-open:rotate-90 transition-transform">▶</span>
-              Bestanden toevoegen of vervangen ({geladenBestanden.length} geladen)
+              [Dev] Bestanden toevoegen of vervangen ({geladenBestanden.length} geladen)
             </summary>
             <div className="mt-3 space-y-2">
               <BestandUpload
@@ -153,11 +192,10 @@ export default function App() {
 
               {/* Hoofdcontent */}
               <div className="flex-1 min-w-0 space-y-3">
-                {/* Export knoppen */}
                 {exportFout && (
                   <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-800 text-sm flex items-center justify-between">
                     <span>{exportFout}</span>
-                    <button onClick={() => setExportFout(null)} className="text-red-400 hover:text-red-600 ml-2">×</button>
+                    <button onClick={() => setExportFout(null)} aria-label="Melding sluiten" className="text-red-400 hover:text-red-600 ml-2">×</button>
                   </div>
                 )}
                 <div className="flex gap-2 justify-end">
@@ -175,7 +213,6 @@ export default function App() {
                   </button>
                 </div>
 
-                {/* Tabel of Bestuur weergave */}
                 {weergave === 'tabel' ? (
                   <ResultatenTabel
                     rijen={paginaRijen}

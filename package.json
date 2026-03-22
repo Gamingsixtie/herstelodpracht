@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "manifest": "node scripts/update-manifest.js",
+    "build": "node scripts/update-manifest.js && tsc && vite build",
     "lint": "tsc --noEmit",
     "preview": "vite preview"
   },
