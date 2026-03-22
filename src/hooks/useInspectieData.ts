@@ -89,9 +89,20 @@ export function useInspectieData() {
         };
 
         if (data.schoolRijen.length > 0 || data.bestuurRijen.length > 0) {
-          setRijen(data.schoolRijen);
+          // Herstel defaults voor gestripte velden
+          const schoolRijen = (data.schoolRijen as Record<string, unknown>[]).map(r => ({
+            BRIN: '', Vestiging: '', OVT: '', OVTNaam: '',
+            Bestuursnummer: 0, Bestuursnaam: '', Sector: 'PO' as const,
+            TypeOVT: '', Elementtype: '',
+            TypeOnderzoek: '', TypeOnderzoekCode: '', Onderzoeksnummer: '',
+            KwaliteitOnderwijs: 'Geen eindoordeel',
+            Vaststellingsdatum: '', Publicatiedatum: '', Peildatum: '',
+            _vaststellingsdatumRaw: 0, _publicatiedatumRaw: 0,
+            ...r,
+          })) as InspectieRij[];
+          setRijen(schoolRijen);
           setBesturenData(data.bestuurRijen);
-          setSamenvatting(berekenSamenvatting(data.schoolRijen));
+          setSamenvatting(berekenSamenvatting(schoolRijen));
           setGeladenBestanden(data.geladenBestanden);
           setBronBestandenGeladen(true);
         }
@@ -116,7 +127,7 @@ export function useInspectieData() {
       for (const file of files) {
         try {
           const buffer = await file.arrayBuffer();
-          const result = parseBestand(buffer);
+          const result = await parseBestand(buffer);
           if (result.type === 'school') {
             nieuweSchoolRijen.push(...result.schoolRijen);
           } else {

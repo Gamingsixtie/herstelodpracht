@@ -1,4 +1,3 @@
-import * as XLSX from 'xlsx';
 import type { InspectieRij, RuweInspectieRij, DataSamenvatting, SectorTelling, BestuurRij } from '../types/inspectie';
 
 /** Verwachte kolommen voor school-bestanden (PO/SO/VO) */
@@ -65,7 +64,8 @@ function normaliseerBestuursnummer(waarde: unknown): { nummer: number; origineel
 /**
  * Detecteer bestandstype en parse naar het juiste formaat.
  */
-export function parseBestand(buffer: ArrayBuffer): ParseResultaat {
+export async function parseBestand(buffer: ArrayBuffer): Promise<ParseResultaat> {
+  const XLSX = await import('xlsx');
   const workbook = XLSX.read(buffer, { type: 'array' });
   const eersteSheet = workbook.SheetNames[0];
   if (!eersteSheet) {

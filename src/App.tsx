@@ -217,13 +217,13 @@ export default function App() {
                 )}
                 <div className="flex gap-2 justify-end">
                   <button
-                    onClick={() => setExportFout(exportNaarExcel(gefilterdeRijen, filters))}
+                    onClick={async () => setExportFout(await exportNaarExcel(gefilterdeRijen, filters))}
                     className="px-3 py-1.5 text-sm bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
                   >
                     Exporteer Excel
                   </button>
                   <button
-                    onClick={() => setExportFout(exportNaarPDF(gefilterdeRijen, filters))}
+                    onClick={async () => setExportFout(await exportNaarPDF(gefilterdeRijen, filters))}
                     className="px-3 py-1.5 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
                   >
                     Exporteer PDF

@@ -5,8 +5,8 @@
 import { readdirSync, writeFileSync } from 'fs';
 import { join, extname } from 'path';
 
-const dir = join(import.meta.dirname, '..', 'public', 'bronbestanden');
-const manifestPath = join(dir, 'manifest.json');
+const dir = join(import.meta.dirname, '..', 'bronbestanden');
+const manifestPath = join(import.meta.dirname, '..', 'public', 'bronbestanden', 'manifest.json');
 
 const extensies = ['.ods', '.xlsx', '.xls'];
 const bestanden = readdirSync(dir)

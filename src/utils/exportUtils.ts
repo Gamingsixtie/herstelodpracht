@@ -1,6 +1,3 @@
-import * as XLSX from 'xlsx';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import type { InspectieRij, FilterState } from '../types/inspectie';
 
 /** Kolommen die in de tabel en exports getoond worden */
@@ -35,11 +32,13 @@ function genereerBestandsnaam(filters: FilterState): string {
  * Exporteer gefilterde data naar Excel (.xlsx).
  * Geeft null terug bij succes, of een foutmelding bij falen.
  */
-export function exportNaarExcel(rijen: InspectieRij[], filters: FilterState): string | null {
+export async function exportNaarExcel(rijen: InspectieRij[], filters: FilterState): Promise<string | null> {
   try {
     if (rijen.length === 0) {
       return 'Er zijn geen resultaten om te exporteren. Pas de filters aan.';
     }
+
+    const XLSX = await import('xlsx');
 
     const headers = EXPORT_KOLOMMEN.map(k => k.label);
     const data = rijen.map(rij =>
@@ -69,12 +68,14 @@ export function exportNaarExcel(rijen: InspectieRij[], filters: FilterState): st
  * Exporteer gefilterde data naar PDF.
  * Geeft null terug bij succes, of een foutmelding bij falen.
  */
-export function exportNaarPDF(rijen: InspectieRij[], filters: FilterState): string | null {
+export async function exportNaarPDF(rijen: InspectieRij[], filters: FilterState): Promise<string | null> {
   try {
     if (rijen.length === 0) {
       return 'Er zijn geen resultaten om te exporteren. Pas de filters aan.';
     }
 
+    const { jsPDF } = await import('jspdf');
+    const { default: autoTable } = await import('jspdf-autotable');
     const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
     doc.setFontSize(14);

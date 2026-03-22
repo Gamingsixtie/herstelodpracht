@@ -8,7 +8,7 @@ import { readFileSync, writeFileSync, readdirSync } from 'fs';
 import { join, extname } from 'path';
 import * as XLSX from 'xlsx';
 
-const bronDir = join(import.meta.dirname, '..', 'public', 'bronbestanden');
+const bronDir = join(import.meta.dirname, '..', 'bronbestanden');
 const outputPath = join(import.meta.dirname, '..', 'public', 'data.json');
 
 const EXTENSIES = ['.ods', '.xlsx', '.xls'];
@@ -178,10 +178,33 @@ console.log(`\nResultaat na deduplicatie:`);
 console.log(`  School: ${alleSchoolRijen.length} ruw -> ${schoolRijen.length} uniek`);
 console.log(`  Bestuur: ${alleBestuurRijen.length} ruw -> ${bestuurRijen.length} uniek`);
 
+// Strip lege velden om data.json kleiner te maken
+// Behoud altijd cruciale velden (nodig voor filtering/koppeling)
+const BEHOUD_ALTIJD = new Set([
+  'BRIN','Vestiging','OVT','Bestuursnummer','Sector',
+  'KwaliteitOnderwijs','TypeOnderzoekCode','_vaststellingsdatumRaw',
+]);
+
+function stripLegeVelden(rij) {
+  const schoon = {};
+  for (const [k, v] of Object.entries(rij)) {
+    if (BEHOUD_ALTIJD.has(k)) {
+      schoon[k] = v;
+      continue;
+    }
+    if (v === '' || v === 0 || v === 'Niet beoordeeld' || v === 'Geen oordeel') continue;
+    schoon[k] = v;
+  }
+  return schoon;
+}
+
+const slimSchool = schoolRijen.map(stripLegeVelden);
+const slimBestuur = bestuurRijen.map(stripLegeVelden);
+
 // Schrijf data.json
 const data = {
-  schoolRijen,
-  bestuurRijen,
+  schoolRijen: slimSchool,
+  bestuurRijen: slimBestuur,
   geladenBestanden,
   gebouwdOp: new Date().toISOString(),
 };
