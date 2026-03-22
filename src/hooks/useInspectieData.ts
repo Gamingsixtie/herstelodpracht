@@ -84,11 +84,33 @@ export function useInspectieData() {
         if (!manifest.bestanden || manifest.bestanden.length === 0) return;
 
         setIsLaden(true);
+
+        // Sorteer bestanden: meest recente eerst (hogere datums eerst)
+        const gesorteerd = [...manifest.bestanden].sort().reverse();
+
+        // Selecteer per type alleen het meest recente bestand
+        // om te voorkomen dat 7x dezelfde maanddata wordt geladen
+        let schoolBestand: string | null = null;
+        let bestuurBestand: string | null = null;
+
+        for (const naam of gesorteerd) {
+          const lower = naam.toLowerCase();
+          if (!schoolBestand && (lower.includes('po') || lower.includes('so') || lower.includes('vo') || lower.includes('primair'))) {
+            schoolBestand = naam;
+          }
+          if (!bestuurBestand && (lower.includes('bg') || lower.includes('besturen'))) {
+            bestuurBestand = naam;
+          }
+          if (schoolBestand && bestuurBestand) break;
+        }
+
+        const teLaden = [schoolBestand, bestuurBestand].filter((n): n is string => n !== null);
+
         const alleSchoolRijen: InspectieRij[] = [];
         const alleBestuurRijen: BestuurRij[] = [];
         const geladen: string[] = [];
 
-        for (const bestandsnaam of manifest.bestanden) {
+        for (const bestandsnaam of teLaden) {
           try {
             const res = await fetch(`./bronbestanden/${encodeURIComponent(bestandsnaam)}`);
             if (!res.ok) continue;
