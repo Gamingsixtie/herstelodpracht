@@ -1,18 +1,26 @@
 import * as XLSX from 'xlsx';
-import type { InspectieRij, RuweInspectieRij, DataSamenvatting, SectorTelling } from '../types/inspectie';
+import type { InspectieRij, RuweInspectieRij, DataSamenvatting, SectorTelling, BestuurRij } from '../types/inspectie';
 
-/** Verwachte kolommen die aanwezig moeten zijn */
-const VERPLICHTE_KOLOMMEN = [
-  'BRIN', 'Vestiging', 'OVT', 'OVTNaam',
-  'Bestuursnummer', 'Bestuursnaam',
-  'Sector', 'TypeOVT',
-  'TypeOnderzoek', 'KwaliteitOnderwijs',
-  'Vaststellingsdatum',
+/** Verwachte kolommen voor school-bestanden (PO/SO/VO) */
+const SCHOOL_KOLOMMEN = [
+  'BRIN', 'Bestuursnummer', 'Bestuursnaam',
+  'Sector', 'TypeOnderzoek', 'KwaliteitOnderwijs',
 ];
+
+/** Verwachte kolommen voor bestuur-bestanden (BG) */
+const BESTUUR_KOLOMMEN = ['Bestuursnummer', 'Bestuursnaam'];
+const BESTUUR_UNIEKE_KOLOMMEN = ['SectorenBijBestuur', 'FinancieelBeheer'];
+
+export type BestandType = 'school' | 'bestuur';
+
+export interface ParseResultaat {
+  type: BestandType;
+  schoolRijen: InspectieRij[];
+  bestuurRijen: BestuurRij[];
+}
 
 /**
  * Converteer YYYYMMDD getal naar DD-MM-YYYY string.
- * Bijv. 20241008 → "08-10-2024"
  */
 export function formatDatumGetal(datum: number | null | undefined): string {
   if (datum == null || datum === 0) return '';
@@ -21,10 +29,6 @@ export function formatDatumGetal(datum: number | null | undefined): string {
   return `${s.slice(6, 8)}-${s.slice(4, 6)}-${s.slice(0, 4)}`;
 }
 
-/**
- * Parse een YYYYMMDD getal naar een sorteerbaar getal.
- * Geeft 0 terug als het geen geldig getal is.
- */
 export function parseDatumGetal(waarde: unknown): number {
   if (waarde == null) return 0;
   const num = Number(waarde);
@@ -33,12 +37,35 @@ export function parseDatumGetal(waarde: unknown): number {
 }
 
 /**
- * Parse een ODS of XLSX bestand naar genormaliseerde inspectierijen.
+ * Normaliseer Bestuursnummer — kan binnenkomen als:
+ * - Getal: 8
+ * - String: "00008"
+ * - Excel formule: ="00008"
  */
-export function parseBestand(buffer: ArrayBuffer): {
-  rijen: InspectieRij[];
-  samenvatting: DataSamenvatting;
-} {
+function normaliseerBestuursnummer(waarde: unknown): { nummer: number; origineel: string } {
+  if (waarde == null) return { nummer: 0, origineel: '' };
+
+  let str = String(waarde).trim();
+
+  // Strip Excel formula-formaat: ="00008" → 00008
+  if (str.startsWith('="') && str.endsWith('"')) {
+    str = str.slice(2, -1);
+  }
+  // Strip enkele quotes
+  if (str.startsWith("='") && str.endsWith("'")) {
+    str = str.slice(2, -1);
+  }
+
+  const origineel = str;
+  const nummer = parseInt(str, 10) || 0;
+
+  return { nummer, origineel };
+}
+
+/**
+ * Detecteer bestandstype en parse naar het juiste formaat.
+ */
+export function parseBestand(buffer: ArrayBuffer): ParseResultaat {
   const workbook = XLSX.read(buffer, { type: 'array' });
   const eersteSheet = workbook.SheetNames[0];
   if (!eersteSheet) {
@@ -56,37 +83,52 @@ export function parseBestand(buffer: ArrayBuffer): {
     throw new Error('Het bestand bevat geen gegevens.');
   }
 
-  // Valideer kolommen
   const eersteRij = ruweData[0];
-  if (eersteRij) {
-    const kolommen = Object.keys(eersteRij);
-    const ontbrekendeKolommen = VERPLICHTE_KOLOMMEN.filter(k => !kolommen.includes(k));
-    if (ontbrekendeKolommen.length > 0) {
-      throw new Error(
-        `De volgende kolommen ontbreken in het bestand: ${ontbrekendeKolommen.join(', ')}. ` +
-        `Controleer of het juiste inspectiebestand is geüpload.`
-      );
-    }
+  if (!eersteRij) {
+    throw new Error('Het bestand bevat geen gegevens.');
   }
 
-  // Normaliseer rijen
-  const rijen: InspectieRij[] = ruweData.map(rij => normaliseerRij(rij));
+  const kolommen = Object.keys(eersteRij);
 
-  const samenvatting = berekenSamenvatting(rijen);
+  // Auto-detectie: heeft het BRIN → school, heeft het SectorenBijBestuur → bestuur
+  const heeftSchoolKolommen = SCHOOL_KOLOMMEN.every(k => kolommen.includes(k));
+  const heeftBestuurKolommen = BESTUUR_UNIEKE_KOLOMMEN.some(k => kolommen.includes(k));
 
-  return { rijen, samenvatting };
+  if (heeftBestuurKolommen && !heeftSchoolKolommen) {
+    // === BESTUUR-BESTAND ===
+    const ontbrekend = BESTUUR_KOLOMMEN.filter(k => !kolommen.includes(k));
+    if (ontbrekend.length > 0) {
+      throw new Error(`Besturenbestand mist kolommen: ${ontbrekend.join(', ')}`);
+    }
+
+    const bestuurRijen = ruweData.map(rij => normaliseerBestuurRij(rij));
+    return { type: 'bestuur', schoolRijen: [], bestuurRijen };
+  }
+
+  if (heeftSchoolKolommen) {
+    // === SCHOOL-BESTAND ===
+    const schoolRijen = ruweData.map(rij => normaliseerSchoolRij(rij));
+    return { type: 'school', schoolRijen, bestuurRijen: [] };
+  }
+
+  // Onbekend formaat
+  throw new Error(
+    'Onherkenbaar bestandsformaat. Verwacht een school-bestand (met BRIN, Sector, etc.) ' +
+    'of een besturenbestand (met SectorenBijBestuur, FinancieelBeheer).'
+  );
 }
 
-function normaliseerRij(rij: RuweInspectieRij): InspectieRij {
+function normaliseerSchoolRij(rij: RuweInspectieRij): InspectieRij {
   const vaststellingRaw = parseDatumGetal(rij['Vaststellingsdatum']);
   const publicatieRaw = parseDatumGetal(rij['Publicatiedatum']);
+  const { nummer: bestuursnummer } = normaliseerBestuursnummer(rij['Bestuursnummer']);
 
   const genormaliseerd: InspectieRij = {
     BRIN: String(rij['BRIN'] ?? ''),
     Vestiging: String(rij['Vestiging'] ?? ''),
     OVT: String(rij['OVT'] ?? ''),
     OVTNaam: String(rij['OVTNaam'] ?? ''),
-    Bestuursnummer: Number(rij['Bestuursnummer'] ?? 0),
+    Bestuursnummer: bestuursnummer,
     Bestuursnaam: String(rij['Bestuursnaam'] ?? ''),
     Sector: String(rij['Sector'] ?? '') as 'PO' | 'SO' | 'VO',
     TypeOVT: String(rij['TypeOVT'] ?? ''),
@@ -102,7 +144,7 @@ function normaliseerRij(rij: RuweInspectieRij): InspectieRij {
     _publicatiedatumRaw: publicatieRaw,
   };
 
-  // Kopieer alle overige kolommen (standaard-oordelen etc.)
+  // Kopieer overige kolommen (standaard-oordelen etc.)
   for (const [key, value] of Object.entries(rij)) {
     if (!(key in genormaliseerd)) {
       genormaliseerd[key] = value == null || String(value) === 'NaN' || String(value) === 'nan'
@@ -112,6 +154,19 @@ function normaliseerRij(rij: RuweInspectieRij): InspectieRij {
   }
 
   return genormaliseerd;
+}
+
+function normaliseerBestuurRij(rij: RuweInspectieRij): BestuurRij {
+  const { nummer, origineel } = normaliseerBestuursnummer(rij['Bestuursnummer']);
+
+  return {
+    Peildatum: String(rij['Peildatum'] ?? ''),
+    Bestuursnummer: nummer,
+    BestuursnummerOrigineel: origineel,
+    Bestuursnaam: String(rij['Bestuursnaam'] ?? ''),
+    SectorenBijBestuur: String(rij['SectorenBijBestuur'] ?? ''),
+    FinancieelBeheer: String(rij['FinancieelBeheer'] ?? 'Geen samenvattend oordeel') || 'Geen samenvattend oordeel',
+  };
 }
 
 export function berekenSamenvatting(rijen: InspectieRij[]): DataSamenvatting {

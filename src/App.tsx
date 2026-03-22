@@ -16,6 +16,8 @@ type Weergave = 'tabel' | 'bestuur';
 export default function App() {
   const {
     rijen,
+    besturenData,
+    besturenMap,
     samenvatting,
     filters,
     sortState,
@@ -134,7 +136,7 @@ export default function App() {
         {/* Samenvatting + Content */}
         {samenvatting && (
           <>
-            <Samenvatting samenvatting={samenvatting} />
+            <Samenvatting samenvatting={samenvatting} besturenData={besturenData} />
 
             {/* Filters + Content layout */}
             <div className="flex gap-6">
@@ -229,6 +231,7 @@ export default function App() {
                   <BestuurOverzicht
                     rijen={gefilterdeRijen}
                     alleRijen={rijen}
+                    besturenMap={besturenMap}
                     onRijKlik={setGeselecteerdeRij}
                   />
                 )}

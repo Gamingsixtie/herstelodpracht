@@ -41,6 +41,16 @@ export interface RuweInspectieRij {
   [key: string]: string | number | null | undefined;
 }
 
+/** Eén rij uit een besturenbestand (BG) — 5 kolommen */
+export interface BestuurRij {
+  Peildatum: string;
+  Bestuursnummer: number;       // genormaliseerd (leading zeros gestript)
+  BestuursnummerOrigineel: string; // origineel met leading zeros bijv. "00008"
+  Bestuursnaam: string;
+  SectorenBijBestuur: string;   // bijv. "PO-VO-SO"
+  FinancieelBeheer: string;     // bijv. "Voldoende" of "Geen samenvattend oordeel"
+}
+
 /** Samenvatting na upload */
 export interface DataSamenvatting {
   totaalRijen: number;

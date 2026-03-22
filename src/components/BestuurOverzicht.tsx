@@ -1,16 +1,19 @@
 import { useState, useMemo } from 'react';
-import type { InspectieRij } from '../types/inspectie';
+import type { InspectieRij, BestuurRij } from '../types/inspectie';
 import { TYPE_OVT_LABELS } from '../types/inspectie';
 
 interface Props {
   rijen: InspectieRij[]; // gefilterde rijen
   alleRijen: InspectieRij[]; // alle rijen (voor context)
+  besturenMap: Map<number, BestuurRij>;
   onRijKlik: (rij: InspectieRij) => void;
 }
 
 interface BestuurGroep {
   bestuursnummer: number;
   bestuursnaam: string;
+  // Bestuursdata uit BG-bestand
+  bestuursInfo: BestuurRij | null;
   // Onderzoeken op bestuursniveau
   bestuurOnderzoeken: InspectieRij[];
   heeftBestuurHerstel: boolean;
@@ -72,7 +75,7 @@ function oordeelKleur(oordeel: string): string {
 type SortOptie = 'ernst' | 'naam' | 'aantal';
 type FilterOptie = 'alle' | 'alleen-herstel' | 'bestuur-herstel';
 
-export function BestuurOverzicht({ rijen, onRijKlik }: Props) {
+export function BestuurOverzicht({ rijen, besturenMap, onRijKlik }: Props) {
   const [zoek, setZoek] = useState('');
   const [sorteer, setSorteer] = useState<SortOptie>('ernst');
   const [filter, setFilter] = useState<FilterOptie>('alleen-herstel');
@@ -87,6 +90,7 @@ export function BestuurOverzicht({ rijen, onRijKlik }: Props) {
         groepen.set(rij.Bestuursnummer, {
           bestuursnummer: rij.Bestuursnummer,
           bestuursnaam: rij.Bestuursnaam,
+          bestuursInfo: besturenMap.get(rij.Bestuursnummer) ?? null,
           bestuurOnderzoeken: [],
           heeftBestuurHerstel: false,
           scholen: [],
@@ -151,7 +155,7 @@ export function BestuurOverzicht({ rijen, onRijKlik }: Props) {
     }
 
     return Array.from(groepen.values());
-  }, [rijen]);
+  }, [rijen, besturenMap]);
 
   // Filter en sorteer
   const gefilterd = useMemo(() => {
@@ -325,6 +329,17 @@ function BestuurRij({ bestuur, isOpen, onToggle, onRijKlik }: {
                 Herstelopdracht bestuur
               </span>
             )}
+            {bestuur.bestuursInfo && bestuur.bestuursInfo.FinancieelBeheer !== 'Geen samenvattend oordeel' && (
+              <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${
+                bestuur.bestuursInfo.FinancieelBeheer === 'Voldoende'
+                  ? 'bg-blue-50 text-blue-700 border-blue-200'
+                  : bestuur.bestuursInfo.FinancieelBeheer === 'Onvoldoende'
+                  ? 'bg-orange-50 text-orange-700 border-orange-200'
+                  : 'bg-gray-50 text-gray-600 border-gray-200'
+              }`}>
+                Financieel: {bestuur.bestuursInfo.FinancieelBeheer}
+              </span>
+            )}
           </div>
 
           <div className="flex gap-3 mt-1 text-xs text-gray-500">
@@ -336,6 +351,9 @@ function BestuurRij({ bestuur, isOpen, onToggle, onRijKlik }: {
             )}
             {bestuur.bestuurOnderzoeken.length > 0 && (
               <span>{bestuur.bestuurOnderzoeken.length} bestuursonderzoeken</span>
+            )}
+            {bestuur.bestuursInfo && (
+              <span className="text-gray-400">Sectoren: {bestuur.bestuursInfo.SectorenBijBestuur}</span>
             )}
           </div>
         </div>

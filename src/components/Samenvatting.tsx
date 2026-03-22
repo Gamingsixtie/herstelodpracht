@@ -1,10 +1,11 @@
-import type { DataSamenvatting } from '../types/inspectie';
+import type { DataSamenvatting, BestuurRij } from '../types/inspectie';
 
 interface Props {
   samenvatting: DataSamenvatting;
+  besturenData: BestuurRij[];
 }
 
-export function Samenvatting({ samenvatting }: Props) {
+export function Samenvatting({ samenvatting, besturenData }: Props) {
   const { perSector } = samenvatting;
 
   return (
@@ -74,6 +75,28 @@ export function Samenvatting({ samenvatting }: Props) {
           );
         })}
       </div>
+
+      {/* Besturendata */}
+      {besturenData.length > 0 && (
+        <div className="bg-white border border-gray-200 rounded-lg p-4">
+          <div className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">
+            Bestuursgegevens (uit BG-bestanden)
+          </div>
+          <div className="flex gap-6 text-sm text-gray-600">
+            <span><strong className="text-gray-900">{besturenData.length}</strong> besturen met bestuursdata</span>
+            <span>
+              <strong className="text-gray-900">
+                {besturenData.filter(b => b.FinancieelBeheer === 'Voldoende').length}
+              </strong> financieel voldoende
+            </span>
+            <span>
+              <strong className="text-gray-900">
+                {besturenData.filter(b => b.FinancieelBeheer === 'Onvoldoende').length}
+              </strong> financieel onvoldoende
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

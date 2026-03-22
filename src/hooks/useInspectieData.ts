@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import type { InspectieRij, DataSamenvatting, FilterState } from '../types/inspectie';
+import type { InspectieRij, DataSamenvatting, FilterState, BestuurRij } from '../types/inspectie';
 import { INITIAL_FILTER_STATE } from '../types/inspectie';
 import { parseBestand, berekenSamenvatting } from '../utils/parser';
 import { filterData, sorteerData } from '../utils/filters';
@@ -26,6 +26,20 @@ function slaOpInStorage(key: string, waarde: unknown): void {
   }
 }
 
+/**
+ * Dedupliceer bestuurdata: houd per Bestuursnummer alleen de meest recente peildatum.
+ */
+function dedupliceerBesturen(rijen: BestuurRij[]): BestuurRij[] {
+  const perNummer = new Map<number, BestuurRij>();
+  for (const rij of rijen) {
+    const bestaand = perNummer.get(rij.Bestuursnummer);
+    if (!bestaand || rij.Peildatum > bestaand.Peildatum) {
+      perNummer.set(rij.Bestuursnummer, rij);
+    }
+  }
+  return Array.from(perNummer.values());
+}
+
 interface SortState {
   kolom: string;
   richting: 'asc' | 'desc';
@@ -33,6 +47,7 @@ interface SortState {
 
 export function useInspectieData() {
   const [rijen, setRijen] = useState<InspectieRij[]>([]);
+  const [besturenData, setBesturenData] = useState<BestuurRij[]>([]);
   const [samenvatting, setSamenvatting] = useState<DataSamenvatting | null>(null);
   const [filters, setFilters] = useState<FilterState>(() =>
     laadUitStorage(STORAGE_KEY_FILTERS, INITIAL_FILTER_STATE)
@@ -51,7 +66,6 @@ export function useInspectieData() {
     slaOpInStorage(STORAGE_KEY_FILTERS, filters);
   }, [filters]);
 
-  // Persisteer bestandsnamen
   useEffect(() => {
     slaOpInStorage(STORAGE_KEY_BESTANDEN, geladenBestanden);
   }, [geladenBestanden]);
@@ -70,7 +84,8 @@ export function useInspectieData() {
         if (!manifest.bestanden || manifest.bestanden.length === 0) return;
 
         setIsLaden(true);
-        const alleRijen: InspectieRij[] = [];
+        const alleSchoolRijen: InspectieRij[] = [];
+        const alleBestuurRijen: BestuurRij[] = [];
         const geladen: string[] = [];
 
         for (const bestandsnaam of manifest.bestanden) {
@@ -79,21 +94,27 @@ export function useInspectieData() {
             if (!res.ok) continue;
             const buffer = await res.arrayBuffer();
             const result = parseBestand(buffer);
-            alleRijen.push(...result.rijen);
+
+            if (result.type === 'school') {
+              alleSchoolRijen.push(...result.schoolRijen);
+            } else {
+              alleBestuurRijen.push(...result.bestuurRijen);
+            }
             geladen.push(bestandsnaam);
           } catch {
             // Individueel bestand overslaan bij fout
           }
         }
 
-        if (alleRijen.length > 0) {
-          setRijen(alleRijen);
-          setSamenvatting(berekenSamenvatting(alleRijen));
+        if (alleSchoolRijen.length > 0 || alleBestuurRijen.length > 0) {
+          setRijen(alleSchoolRijen);
+          setBesturenData(dedupliceerBesturen(alleBestuurRijen));
+          setSamenvatting(berekenSamenvatting(alleSchoolRijen));
           setGeladenBestanden(geladen);
           setBronBestandenGeladen(true);
         }
       } catch {
-        // Manifest niet gevonden = geen ingebouwde bestanden, dat is OK
+        // Manifest niet gevonden = geen ingebouwde bestanden
       } finally {
         setIsLaden(false);
       }
@@ -106,20 +127,25 @@ export function useInspectieData() {
     setIsLaden(true);
     setFout(null);
     try {
-      const nieuweRijen: InspectieRij[] = [];
+      const nieuweSchoolRijen: InspectieRij[] = [];
+      const nieuweBestuurRijen: BestuurRij[] = [];
       const fouten: string[] = [];
 
       for (const file of files) {
         try {
           const buffer = await file.arrayBuffer();
           const result = parseBestand(buffer);
-          nieuweRijen.push(...result.rijen);
+          if (result.type === 'school') {
+            nieuweSchoolRijen.push(...result.schoolRijen);
+          } else {
+            nieuweBestuurRijen.push(...result.bestuurRijen);
+          }
         } catch (e) {
           fouten.push(`${file.name}: ${e instanceof Error ? e.message : 'Onbekende fout'}`);
         }
       }
 
-      if (fouten.length > 0 && nieuweRijen.length === 0) {
+      if (fouten.length > 0 && nieuweSchoolRijen.length === 0 && nieuweBestuurRijen.length === 0) {
         setFout(`Geen bestanden konden worden geladen:\n${fouten.join('\n')}`);
         return;
       }
@@ -128,11 +154,17 @@ export function useInspectieData() {
         setFout(`Sommige bestanden konden niet worden geladen:\n${fouten.join('\n')}`);
       }
 
-      setRijen(prev => {
-        const samengevoegd = [...prev, ...nieuweRijen];
-        setSamenvatting(berekenSamenvatting(samengevoegd));
-        return samengevoegd;
-      });
+      if (nieuweSchoolRijen.length > 0) {
+        setRijen(prev => {
+          const samengevoegd = [...prev, ...nieuweSchoolRijen];
+          setSamenvatting(berekenSamenvatting(samengevoegd));
+          return samengevoegd;
+        });
+      }
+
+      if (nieuweBestuurRijen.length > 0) {
+        setBesturenData(prev => dedupliceerBesturen([...prev, ...nieuweBestuurRijen]));
+      }
 
       setGeladenBestanden(prev => [
         ...prev,
@@ -151,6 +183,7 @@ export function useInspectieData() {
 
   const wisAlleData = useCallback(() => {
     setRijen([]);
+    setBesturenData([]);
     setSamenvatting(null);
     setGeladenBestanden([]);
     setFilters(INITIAL_FILTER_STATE);
@@ -200,8 +233,19 @@ export function useInspectieData() {
     [rijen]
   );
 
+  // Bestuur lookup map: Bestuursnummer → BestuurRij
+  const besturenMap = useMemo(() => {
+    const map = new Map<number, BestuurRij>();
+    for (const b of besturenData) {
+      map.set(b.Bestuursnummer, b);
+    }
+    return map;
+  }, [besturenData]);
+
   return {
     rijen,
+    besturenData,
+    besturenMap,
     samenvatting,
     filters,
     sortState,
