@@ -109,24 +109,31 @@ export function BestuurOverzicht({ rijen, besturenMap, onRijKlik }: Props) {
       }
     }
 
-    // Voeg BG-besturen toe die niet in school-data voorkomen + markeer Onvoldoende
+    // Verrijk bestaande besturen met BG-data + voeg alleen relevante BG-only besturen toe
     for (const [bn, info] of besturenMap) {
-      if (!groepen.has(bn)) {
-        // Bestuur alleen in BG-data, niet in school-data
-        groepen.set(bn, {
-          bestuursnummer: bn,
-          bestuursnaam: info.Bestuursnaam,
-          bestuursInfo: info,
-          bestuurOnderzoeken: [],
-          heeftBestuurHerstel: info.Eindoordeel === 'Onvoldoende' || info.Eindoordeel === 'Zeer zwak',
-          scholen: [],
-          totaalHerstelScholen: 0,
-        });
-      } else {
-        // Bestuur bestaat al — markeer als herstel als BG-Eindoordeel Onvoldoende is
+      if (groepen.has(bn)) {
+        // Bestuur bestaat al in school-data — markeer als herstel bij Onvoldoende
         const groep = groepen.get(bn)!;
         if (info.Eindoordeel === 'Onvoldoende' || info.Eindoordeel === 'Zeer zwak') {
           groep.heeftBestuurHerstel = true;
+        }
+      } else {
+        // Bestuur alleen in BG-data — alleen toevoegen als het relevant is
+        // (Onvoldoende/Zeer zwak, of PO/SO/VO sector)
+        const sectoren = info.SectorenBijBestuur || '';
+        const isRelevant = info.Eindoordeel === 'Onvoldoende' || info.Eindoordeel === 'Zeer zwak';
+        const isPOSOVO = /\b(PO|SO|VO)\b/.test(sectoren) && !(/\b(HO|MBO)\b/.test(sectoren) && !/\b(PO|SO|VO)\b/.test(sectoren));
+
+        if (isRelevant || isPOSOVO) {
+          groepen.set(bn, {
+            bestuursnummer: bn,
+            bestuursnaam: info.Bestuursnaam,
+            bestuursInfo: info,
+            bestuurOnderzoeken: [],
+            heeftBestuurHerstel: isRelevant,
+            scholen: [],
+            totaalHerstelScholen: 0,
+          });
         }
       }
     }
